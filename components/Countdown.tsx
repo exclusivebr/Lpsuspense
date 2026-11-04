@@ -28,7 +28,7 @@ export default function Countdown({ target }: { target: string }) {
 
   return (
     <div className="countdown" aria-live="polite">
-      <span className="countdown-label">{done ? "As portas estão abertas" : "Abertura em"}</span>
+      <span className="countdown-label">{done ? "Agora eu posso falar" : "Eu falo em"}</span>
       <div className="countdown-grid">
         {(Object.entries(p) as [string, number][]).map(([k, v]) => (
           <div key={k} className="countdown-cell">

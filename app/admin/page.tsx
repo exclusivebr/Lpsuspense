@@ -5,7 +5,7 @@ import { formatPhone } from "@/lib/validate";
 import { login, logout, removeLead } from "./actions";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Admin — Marcha no Tráfego", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Admin — Lista confidencial", robots: { index: false, follow: false } };
 
 const fmt = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -61,7 +61,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <div className="admin-head">
         <div>
           <span className="stamp mono">Confidencial</span>
-          <h1 style={{ marginTop: 10 }}>Lista secreta — Marcha no Tráfego</h1>
+          <h1 style={{ marginTop: 10 }}>Lista confidencial</h1>
         </div>
         <div className="admin-actions">
           <a className="btn btn-primary" href="/admin/export">

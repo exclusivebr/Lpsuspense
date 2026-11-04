@@ -6,7 +6,7 @@ import { formatPhone, validateLead } from "@/lib/validate";
 const WHATS = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "").replace(/\D/g, "");
 const MSG =
   process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ||
-  "Oi! Sou {nome} e quero entrar na lista secreta da Marcha no Tráfego 🔒";
+  "Oi! Sou {nome}. Vi o arquivo confidencial e quero saber primeiro 🔒";
 
 function whatsappUrl(nome: string) {
   const first = nome.split(" ")[0] || "";
@@ -121,7 +121,7 @@ export default function LeadForm() {
 
       <button type="submit" className="cta" disabled={busy}>
         <span>
-          {status === "sending" ? "Verificando acesso…" : status === "done" ? "Acesso liberado ✓" : "Quero acesso antecipado"}
+          {status === "sending" ? "Verificando…" : status === "done" ? "Você está dentro ✓" : "Quero saber primeiro"}
         </span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -134,7 +134,7 @@ export default function LeadForm() {
         ) : status === "done" ? (
           "Abrindo o WhatsApp…"
         ) : (
-          <>🔒 Seus dados ficam em sigilo. Ao enviar, você será levado ao WhatsApp.</>
+          <>🔒 Ninguém além de mim vê seus dados. Ao enviar, você vai para o meu WhatsApp.</>
         )}
       </p>
     </form>
