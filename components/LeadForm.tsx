@@ -52,9 +52,11 @@ export default function LeadForm() {
         throw new Error(json.error || "Algo deu errado. Tente novamente.");
       }
       setStatus("done");
-      setTimeout(() => {
-        window.location.href = whatsappUrl(v.data.nome);
-      }, 900);
+      if (WHATS) {
+        setTimeout(() => {
+          window.location.href = whatsappUrl(v.data.nome);
+        }, 900);
+      }
     } catch (err) {
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Algo deu errado.");
@@ -132,7 +134,7 @@ export default function LeadForm() {
         {status === "error" ? (
           <span className="field-error">{message}</span>
         ) : status === "done" ? (
-          "Abrindo o WhatsApp…"
+          WHATS ? "Abrindo o WhatsApp…" : "Pronto. Você está na lista. Quando eu puder falar, você fica sabendo."
         ) : (
           <>🔒 Ninguém além de mim vê seus dados.</>
         )}
