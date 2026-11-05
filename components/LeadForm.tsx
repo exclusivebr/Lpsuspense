@@ -8,6 +8,16 @@ const MSG =
   process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE ||
   "Oi! Sou {nome}. Vi o arquivo confidencial e quero saber primeiro 🔒";
 
+// Link do grupo do WhatsApp (tem prioridade sobre o número).
+const GROUP_LINK =
+  process.env.NEXT_PUBLIC_WHATSAPP_LINK || "https://chat.whatsapp.com/Kyw2uvXuGGH8H4uwP7L5on";
+
+function redirectUrl(nome: string) {
+  if (GROUP_LINK) return GROUP_LINK;
+  if (WHATS) return whatsappUrl(nome);
+  return "";
+}
+
 function whatsappUrl(nome: string) {
   const first = nome.split(" ")[0] || "";
   const text = encodeURIComponent(MSG.replace(/\{nome\}/g, first));
@@ -52,9 +62,10 @@ export default function LeadForm() {
         throw new Error(json.error || "Algo deu errado. Tente novamente.");
       }
       setStatus("done");
-      if (WHATS) {
+      const target = redirectUrl(v.data.nome);
+      if (target) {
         setTimeout(() => {
-          window.location.href = whatsappUrl(v.data.nome);
+          window.location.href = target;
         }, 900);
       }
     } catch (err) {
@@ -134,7 +145,7 @@ export default function LeadForm() {
         {status === "error" ? (
           <span className="field-error">{message}</span>
         ) : status === "done" ? (
-          WHATS ? "Abrindo o WhatsApp…" : "Pronto. Você está na lista. Quando eu puder falar, você fica sabendo."
+          GROUP_LINK ? "Abrindo o grupo no WhatsApp…" : WHATS ? "Abrindo o WhatsApp…" : "Pronto. Você está na lista. Quando eu puder falar, você fica sabendo."
         ) : (
           <>🔒 Ninguém além de mim vê seus dados.</>
         )}

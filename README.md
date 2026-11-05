@@ -16,6 +16,7 @@ Feito com Next.js 16 (App Router), pronto para a Vercel.
 
 | Variável | Exemplo | Para quê |
 | --- | --- | --- |
+| `NEXT_PUBLIC_WHATSAPP_LINK` | `https://chat.whatsapp.com/...` | Grupo do WhatsApp para onde o lead vai (padrão já definido no código) |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | `5511999999999` | Seu WhatsApp (55 + DDD + número, só dígitos) |
 | `ADMIN_PASSWORD` | uma senha forte | Senha do painel `/admin` |
 | `NEXT_PUBLIC_WHATSAPP_MESSAGE` | `Oi! Sou {nome} e quero entrar na lista secreta 🔒` | (Opcional) Mensagem pronta. `{nome}` vira o primeiro nome |
