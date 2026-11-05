@@ -77,7 +77,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
       {!storageConfigured() && (
         <p className="warn">
-          Banco não conectado: os leads estão só em memória (modo desenvolvimento). Conecte o Upstash Redis na Vercel.
+          Banco não conectado: os leads estão só em memória (modo desenvolvimento). Conecte um Blob store (ou Upstash Redis) na Vercel.
         </p>
       )}
 
