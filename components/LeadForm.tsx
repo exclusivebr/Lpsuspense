@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatPhone, validateLead } from "@/lib/validate";
+import { newEventId, trackLead } from "@/lib/pixel";
 
 const WHATS = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "").replace(/\D/g, "");
 const MSG =
@@ -50,11 +51,19 @@ export default function LeadForm() {
 
     setStatus("sending");
     setMessage("");
+    const eventId = newEventId();
     try {
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...v.data, empresa, utm: readUtm() }),
+        body: JSON.stringify({
+          ...v.data,
+          empresa,
+          utm: readUtm(),
+          eventId,
+          fbclid: new URLSearchParams(window.location.search).get("fbclid") || undefined,
+          sourceUrl: window.location.href,
+        }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.ok) {
@@ -62,6 +71,8 @@ export default function LeadForm() {
         throw new Error(json.error || "Algo deu errado. Tente novamente.");
       }
       setStatus("done");
+      // Evento Lead (Meta Pixel) — só depois que o lead foi salvo com sucesso.
+      trackLead(eventId);
       const target = redirectUrl(v.data.nome);
       if (target) {
         setTimeout(() => {

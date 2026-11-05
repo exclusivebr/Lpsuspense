@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Countdown from "@/components/Countdown";
 import LeadForm from "@/components/LeadForm";
+import MetaPixel from "@/components/MetaPixel";
 import RecClock from "@/components/RecClock";
 import Rotator from "@/components/Rotator";
 import portrait from "@/public/agente.jpg";
@@ -31,6 +32,7 @@ const Bar = ({ w }: { w: string }) => <span className="bar" style={{ width: w }}
 export default function Home() {
   return (
     <main className="page">
+      <MetaPixel />
       <div className="bg-noise" aria-hidden="true" />
 
       <section className="file mono">
