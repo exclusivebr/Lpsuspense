@@ -134,7 +134,7 @@ export default function LeadForm() {
         ) : status === "done" ? (
           "Abrindo o WhatsApp…"
         ) : (
-          <>🔒 Ninguém além de mim vê seus dados. Ao enviar, você vai para o meu WhatsApp.</>
+          <>🔒 Ninguém além de mim vê seus dados.</>
         )}
       </p>
     </form>
