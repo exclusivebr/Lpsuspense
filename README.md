@@ -1,6 +1,6 @@
-# Marcha no Tráfego — Página de lista secreta
+# Arquivo 00X — Página de lista confidencial
 
-Landing page de suspense (fundo preto) para o lançamento da mentoria **Marcha no Tráfego**.
+Landing page de suspense para o lançamento da mentoria (o nome não aparece na página).
 Coleta **nome, e-mail e WhatsApp**, salva no banco e redireciona o lead para o seu WhatsApp.
 Os leads ficam num painel em **`/admin`** (protegido por senha), com busca, contagem e download em CSV.
 
@@ -9,8 +9,9 @@ Feito com Next.js 16 (App Router), pronto para a Vercel.
 ## Publicar na Vercel
 
 1. Em vercel.com → **Add New → Project** → importe este repositório.
-2. **Banco de dados:** no projeto, vá em **Storage → Create Database → Upstash for Redis** (plano grátis) e conecte ao projeto.
-   Isso cria sozinho as variáveis `KV_REST_API_URL` e `KV_REST_API_TOKEN`.
+2. **Banco de dados:** no projeto, vá em **Storage → Create → Blob** (acesso **Private**) e conecte ao projeto.
+   Isso cria sozinho a variável `BLOB_READ_WRITE_TOKEN`. Cada lead vira um arquivo JSON privado.
+   (Alternativa: Upstash for Redis, que cria `KV_REST_API_URL` e `KV_REST_API_TOKEN`.)
 3. Em **Settings → Environment Variables**, adicione:
 
 | Variável | Exemplo | Para quê |
@@ -35,4 +36,4 @@ npm install
 npm run dev
 ```
 
-Sem as variáveis do Redis, em desenvolvimento os leads ficam só na memória (o admin avisa).
+Sem banco configurado, em desenvolvimento os leads ficam só na memória (o admin avisa).
