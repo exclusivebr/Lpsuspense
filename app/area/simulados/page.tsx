@@ -13,7 +13,7 @@ const GRUPOS: { tipo: Simulado["tipo"]; titulo: string; texto: string }[] = [
 
 export default async function SimuladosPage() {
   const aluno = await requireStudent();
-  const tentativas = await listarTentativas(aluno.email);
+  const tentativas = await listarTentativas(aluno.id);
 
   return (
     <main className="pm-page">

@@ -1,10 +1,7 @@
-import { createHash, createHmac, randomBytes, scrypt as _scrypt, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getJSON, listJSON, setJSON } from "./store";
-
-const scrypt = promisify(_scrypt) as (pwd: string, salt: string, len: number) => Promise<Buffer>;
 
 export const STUDENT_COOKIE = "pmesp_aluno";
 const SESSION_DAYS = 60;
@@ -12,11 +9,12 @@ const SESSION_DAYS = 60;
 export type Purchase = {
   ref: string;
   nome: string;
-  email: string;
+  /** WhatsApp (só dígitos, com DDD). É o login do aluno. */
+  telefone: string;
+  email?: string;
+  cpf?: string;
   status: "pending" | "approved" | "rejected";
   source: "mercadopago" | "wiven" | "manual" | "demo";
-  telefone?: string;
-  cpf?: string;
   /** Cobrança Pix da Wiven. */
   pix?: { transactionId: string; webhookToken?: string; code: string; image?: string; expiresAt?: string };
   /** Última consulta direta ao gateway (limitada para não virar polling). */
@@ -25,69 +23,77 @@ export type Purchase = {
   paymentId?: string;
   createdAt: string;
   approvedAt?: string;
-  /** Preenchido quando o aluno cria a senha (o link de primeiro acesso deixa de valer). */
-  claimedAt?: string;
 };
 
 export type Student = {
-  email: string;
+  /** Telefone normalizado (só dígitos, com DDD). */
+  id: string;
   nome: string;
-  passwordHash: string;
-  salt: string;
   ref: string;
   createdAt: string;
+  /** Acesso cortado (ex.: Pix estornado ou contestado). */
+  bloqueado?: boolean;
 };
 
-export function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
+/** Normaliza para DDD + número (10 ou 11 dígitos). Retorna "" se inválido. */
+export function normalizePhone(v: string) {
+  let d = String(v ?? "").replace(/\D/g, "");
+  if (d.length >= 12 && d.startsWith("55")) d = d.slice(2);
+  if (d.length === 11 && d[2] !== "9") return "";
+  return d.length === 10 || d.length === 11 ? d : "";
 }
 
-export function emailKey(email: string) {
-  return createHash("sha256").update(normalizeEmail(email)).digest("hex").slice(0, 32);
+export function formatPhone(d: string) {
+  return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : d;
+}
+
+export function idKey(id: string) {
+  return createHash("sha256").update(id).digest("hex").slice(0, 32);
 }
 
 export function newRef() {
   return randomBytes(16).toString("hex");
 }
 
+/* ---------------- Alunos ---------------- */
+
+export const getStudent = (telefone: string) => {
+  const id = normalizePhone(telefone);
+  return id ? getJSON<Student>(`students/${idKey(id)}`) : Promise.resolve(null);
+};
+export const listStudents = () => listJSON<Student>("students/");
+
+/** Garante que a conta do aluno acompanha o status da compra (cria ao aprovar, bloqueia ao estornar). */
+async function syncStudent(p: Purchase) {
+  const id = normalizePhone(p.telefone);
+  if (!id) return;
+  const atual = await getJSON<Student>(`students/${idKey(id)}`);
+  if (p.status === "approved") {
+    if (!atual || atual.bloqueado) {
+      await setJSON(`students/${idKey(id)}`, {
+        ...(atual ?? {}),
+        id,
+        nome: atual?.nome ?? p.nome,
+        ref: p.ref,
+        createdAt: atual?.createdAt ?? new Date().toISOString(),
+        bloqueado: false,
+      } satisfies Student);
+    }
+  } else if (p.status === "rejected" && p.approvedAt && atual && atual.ref === p.ref && !atual.bloqueado) {
+    await setJSON(`students/${idKey(id)}`, { ...atual, bloqueado: true });
+  }
+}
+
 /* ---------------- Compras ---------------- */
 
 export const getPurchase = (ref: string) =>
   /^[a-f0-9]{32}$/.test(ref) ? getJSON<Purchase>(`purchases/${ref}`) : Promise.resolve(null);
-export const savePurchase = (p: Purchase) => setJSON(`purchases/${p.ref}`, p);
+export async function savePurchase(p: Purchase) {
+  await setJSON(`purchases/${p.ref}`, p);
+  await syncStudent(p);
+}
 export const listPurchases = async () =>
   (await listJSON<Purchase>("purchases/")).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-/* ---------------- Alunos ---------------- */
-
-export const getStudent = (email: string) => getJSON<Student>(`students/${emailKey(email)}`);
-export const listStudents = () => listJSON<Student>("students/");
-
-async function hashPassword(password: string, salt: string) {
-  return (await scrypt(password, salt, 64)).toString("hex");
-}
-
-export async function createStudent(p: Purchase, password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const student: Student = {
-    email: normalizeEmail(p.email),
-    nome: p.nome,
-    salt,
-    passwordHash: await hashPassword(password, salt),
-    ref: p.ref,
-    createdAt: new Date().toISOString(),
-  };
-  await setJSON(`students/${emailKey(p.email)}`, student);
-  return student;
-}
-
-export async function verifyStudent(email: string, password: string) {
-  const s = await getStudent(email);
-  if (!s) return null;
-  const h = Buffer.from(await hashPassword(password, s.salt), "hex");
-  const ok = Buffer.from(s.passwordHash, "hex");
-  return h.length === ok.length && timingSafeEqual(h, ok) ? s : null;
-}
 
 /* ---------------- Sessão (cookie assinado) ---------------- */
 
@@ -104,9 +110,9 @@ function sign(payload: string) {
   return createHmac("sha256", secret()).update(payload).digest("base64url");
 }
 
-export async function startSession(email: string) {
+export async function startSession(id: string) {
   const exp = Date.now() + SESSION_DAYS * 86_400_000;
-  const payload = Buffer.from(JSON.stringify({ e: normalizeEmail(email), x: exp })).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ t: id, x: exp })).toString("base64url");
   const jar = await cookies();
   jar.set(STUDENT_COOKIE, `${payload}.${sign(payload)}`, {
     httpOnly: true,
@@ -130,9 +136,10 @@ export async function currentStudent(): Promise<Student | null> {
   const got = Buffer.from(sig);
   if (expected.length !== got.length || !timingSafeEqual(expected, got)) return null;
   try {
-    const { e, x } = JSON.parse(Buffer.from(payload, "base64url").toString()) as { e: string; x: number };
-    if (Date.now() > x) return null;
-    return await getStudent(e);
+    const { t, x } = JSON.parse(Buffer.from(payload, "base64url").toString()) as { t: string; x: number };
+    if (!t || Date.now() > x) return null;
+    const s = await getStudent(t);
+    return s && !s.bloqueado ? s : null;
   } catch {
     return null;
   }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { isAdmin } from "@/lib/admin";
-import { listPurchases, listStudents } from "@/lib/accounts";
+import { formatPhone, listPurchases, listStudents } from "@/lib/accounts";
 import { mercadoPagoConfigured, productPrice } from "@/lib/payments";
 import { wivenConfigured } from "@/lib/wiven";
 import { brl, siteUrl } from "@/lib/site";
@@ -35,7 +35,6 @@ export default async function AdminVendas({ searchParams }: { searchParams: Prom
   const [compras, alunos, base] = await Promise.all([listPurchases(), listStudents(), siteUrl()]);
   const aprovadas = compras.filter((c) => c.status === "approved" && c.source !== "demo");
   const receita = aprovadas.reduce((s, c) => s + (c.amount ?? 0), 0);
-  const link = (ref: string) => `${base}/obrigado?ref=${ref}`;
 
   return (
     <main className="pm-page">
@@ -57,21 +56,21 @@ export default async function AdminVendas({ searchParams }: { searchParams: Prom
 
         <div className="pm-card" style={{ marginTop: 16 }}>
           <h3>Liberar acesso manualmente</h3>
-          <p className="pm-muted pm-small">Para vendas por outro canal (Hotmart, Kiwify, Pix direto) ou cortesias. Gera o link de primeiro acesso para enviar ao aluno.</p>
+          <p className="pm-muted pm-small">Para vendas por outro canal (Hotmart, Kiwify, Pix direto) ou cortesias. O aluno entra direto com o WhatsApp informado aqui.</p>
           {novo && (
             <p className="pm-okbox" style={{ wordBreak: "break-all" }}>
-              Acesso liberado! Envie este link ao aluno: <strong>{link(novo)}</strong>
+              Acesso liberado! O aluno já pode entrar em <strong>{base}/entrar</strong> digitando o WhatsApp dele.
             </p>
           )}
-          {erro && <p className="pm-error">Preencha nome e e-mail válidos.</p>}
+          {erro && <p className="pm-error">Preencha nome e WhatsApp válidos (com DDD).</p>}
           <form action={liberarManual} className="pm-grid pm-grid-3" style={{ alignItems: "end" }}>
             <div className="pm-field" style={{ margin: 0 }}>
               <label htmlFor="nome">Nome</label>
               <input id="nome" name="nome" required />
             </div>
             <div className="pm-field" style={{ margin: 0 }}>
-              <label htmlFor="email">E-mail</label>
-              <input id="email" name="email" type="email" required />
+              <label htmlFor="telefone">WhatsApp</label>
+              <input id="telefone" name="telefone" type="tel" placeholder="(11) 99999-9999" required />
             </div>
             <button className="pm-btn pm-btn-navy" type="submit">Liberar acesso</button>
           </form>
@@ -86,7 +85,7 @@ export default async function AdminVendas({ searchParams }: { searchParams: Prom
                 <th>Cliente</th>
                 <th>Status</th>
                 <th>Origem</th>
-                <th>Primeiro acesso</th>
+                <th>Acesso</th>
               </tr>
             </thead>
             <tbody>
@@ -95,15 +94,15 @@ export default async function AdminVendas({ searchParams }: { searchParams: Prom
                   <td>{new Date(c.createdAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}</td>
                   <td>
                     <strong>{c.nome}</strong>
-                    <div className="pm-small pm-muted">{c.email}</div>
+                    <div className="pm-small pm-muted">{formatPhone(c.telefone ?? "")}</div>
                   </td>
                   <td>
                     <span className={`pm-tag ${STATUS[c.status][1]}`}>{STATUS[c.status][0]}</span>
                   </td>
-                  <td className="pm-small">{c.source}{c.paymentId ? ` #${c.paymentId}` : ""}{c.pix ? ` #${c.pix.transactionId}` : ""}{c.telefone ? <div className="pm-muted">{c.telefone}</div> : null}</td>
+                  <td className="pm-small">{c.source}{c.paymentId ? ` #${c.paymentId}` : ""}{c.pix ? ` #${c.pix.transactionId}` : ""}</td>
                   <td className="pm-small" style={{ wordBreak: "break-all" }}>
                     {c.status === "approved" ? (
-                      c.claimedAt ? "Conta criada" : <a href={link(c.ref)}>{link(c.ref)}</a>
+                      "Liberado: entra com o WhatsApp"
                     ) : (
                       <form action={aprovarCompra}>
                         <input type="hidden" name="ref" value={c.ref} />

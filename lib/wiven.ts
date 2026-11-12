@@ -44,7 +44,7 @@ export async function criarPix(opts: {
   nome: string;
   email: string;
   telefone: string;
-  cpf: string;
+  cpf?: string;
   baseUrl: string;
 }): Promise<WivenPix> {
   const res = await wiven<{
@@ -58,7 +58,7 @@ export async function criarPix(opts: {
     body: JSON.stringify({
       identifier: opts.ref,
       amount: opts.valor,
-      client: { name: opts.nome, email: opts.email, phone: opts.telefone, document: opts.cpf },
+      client: { name: opts.nome, email: opts.email, phone: opts.telefone, ...(opts.cpf ? { document: opts.cpf } : {}) },
       products: [{ id: "missao-pmesp", name: opts.produto, quantity: 1, price: opts.valor }],
       metadata: { provider: "missao-pmesp", orderId: opts.ref },
       callbackUrl: `${opts.baseUrl}/api/webhook/wiven`,

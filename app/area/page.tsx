@@ -19,7 +19,7 @@ const ATALHOS = [
 
 export default async function Painel() {
   const aluno = await requireStudent();
-  const tentativas = await listarTentativas(aluno.email);
+  const tentativas = await listarTentativas(aluno.id);
   const c = consolidar(tentativas);
   const feitos = new Set(tentativas.map((t) => t.simuladoId)).size;
   const media = tentativas.length ? Math.round((tentativas.reduce((s, t) => s + t.acertos / t.total, 0) / tentativas.length) * 100) : 0;

@@ -19,7 +19,7 @@ function tempo(seg: number) {
 export default async function ResultadoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const aluno = await requireStudent();
-  const t = await getTentativa(aluno.email, id);
+  const t = await getTentativa(aluno.id, id);
   if (!t) notFound();
 
   const p = pct(t);

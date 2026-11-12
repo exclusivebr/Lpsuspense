@@ -23,7 +23,7 @@ export default async function EntrarPage() {
         <div className="pm-narrow" style={{ maxWidth: 440 }}>
           <div className="pm-card">
             <h1 style={{ fontSize: 26 }}>Área do aluno</h1>
-            <p className="pm-muted">Entre com o e-mail usado na compra.</p>
+            <p className="pm-muted">Digite o WhatsApp que você usou na compra.</p>
             <LoginForm action={entrar} />
             <p className="pm-small pm-muted" style={{ marginTop: 16, marginBottom: 0 }}>
               Primeiro acesso? Use o link que apareceu depois do pagamento. Ainda não tem acesso?{" "}

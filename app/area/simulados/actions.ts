@@ -31,7 +31,7 @@ export async function enviarSimulado(formData: FormData) {
   const id = novoIdTentativa();
   await salvarTentativa({
     id,
-    email: aluno.email,
+    aluno: aluno.id,
     simuladoId: sim.id,
     titulo: sim.titulo,
     questoes: ids,

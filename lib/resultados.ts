@@ -1,12 +1,13 @@
 import { randomBytes } from "node:crypto";
-import { emailKey } from "./accounts";
+import { idKey } from "./accounts";
 import { DISCIPLINAS, NOTA, ORDEM_DISCIPLINAS, type DisciplinaId } from "./edital";
 import type { Correcao, Placar } from "./simulados";
 import { getJSON, listJSON, setJSON } from "./store";
 
 export type Tentativa = Correcao & {
   id: string;
-  email: string;
+  /** Telefone do aluno (id). */
+  aluno: string;
   simuladoId: string;
   titulo: string;
   questoes: string[];
@@ -19,15 +20,15 @@ export function novoIdTentativa() {
   return Date.now().toString(36) + randomBytes(5).toString("hex");
 }
 
-export const salvarTentativa = (t: Tentativa) => setJSON(`attempts/${emailKey(t.email)}/${t.id}`, t);
+export const salvarTentativa = (t: Tentativa) => setJSON(`attempts/${idKey(t.aluno)}/${t.id}`, t);
 
-export async function getTentativa(email: string, id: string) {
+export async function getTentativa(aluno: string, id: string) {
   if (!/^[a-z0-9]{8,30}$/.test(id)) return null;
-  return getJSON<Tentativa>(`attempts/${emailKey(email)}/${id}`);
+  return getJSON<Tentativa>(`attempts/${idKey(aluno)}/${id}`);
 }
 
-export async function listarTentativas(email: string) {
-  const all = await listJSON<Tentativa>(`attempts/${emailKey(email)}/`);
+export async function listarTentativas(aluno: string) {
+  const all = await listJSON<Tentativa>(`attempts/${idKey(aluno)}/`);
   return all.sort((a, b) => b.finalizadoEm.localeCompare(a.finalizadoEm));
 }
 

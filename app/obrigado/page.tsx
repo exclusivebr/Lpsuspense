@@ -4,10 +4,10 @@ import QRCode from "qrcode";
 import AutoRefresh from "@/components/AutoRefresh";
 import CopyPix from "@/components/CopyPix";
 import { brl } from "@/lib/site";
-import { SenhaForm } from "@/components/Forms";
-import { getPurchase, getStudent } from "@/lib/accounts";
+import SubmitButton from "@/components/SubmitButton";
+import { formatPhone, getPurchase } from "@/lib/accounts";
 import { syncPurchase } from "@/lib/billing";
-import { criarAcesso } from "../actions";
+import { acessarCompra } from "../actions";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Seu acesso", robots: { index: false } };
@@ -47,27 +47,19 @@ export default async function ObrigadoPage({ searchParams }: { searchParams: Pro
   }
   const p = await syncPurchase(found);
 
-  if (p.status === "approved" && !p.claimedAt && !(await getStudent(p.email))) {
+  if (p.status === "approved") {
     return (
       <Shell>
         <span className="pm-tag pm-tag-ok">Pagamento aprovado</span>
         <h1 style={{ fontSize: 26, marginTop: 10 }}>Bem-vindo(a) à missão, {p.nome.split(" ")[0]}!</h1>
         <p>
-          Seu login é <strong>{p.email}</strong>. Crie uma senha para entrar na área do aluno.
+          Seu acesso está liberado. Para entrar depois, de qualquer aparelho, use só o seu WhatsApp:{" "}
+          <strong>{formatPhone(p.telefone)}</strong>.
         </p>
-        <SenhaForm action={criarAcesso} refId={p.ref} />
-      </Shell>
-    );
-  }
-  if (p.status === "approved") {
-    return (
-      <Shell>
-        <span className="pm-tag pm-tag-ok">Acesso liberado</span>
-        <h1 style={{ fontSize: 26, marginTop: 10 }}>Sua conta já está criada</h1>
-        <p>Entre com o e-mail {p.email} e a senha que você cadastrou.</p>
-        <Link href="/entrar" className="pm-btn pm-btn-gold pm-btn-block">
-          Entrar na área do aluno
-        </Link>
+        <form action={acessarCompra}>
+          <input type="hidden" name="ref" value={p.ref} />
+          <SubmitButton pending="Entrando…">Entrar na área do aluno</SubmitButton>
+        </form>
       </Shell>
     );
   }
@@ -95,7 +87,7 @@ export default async function ObrigadoPage({ searchParams }: { searchParams: Pro
         <div style={{ width: 240, maxWidth: "100%", margin: "8px auto 16px", background: "#fff", padding: 8, borderRadius: 12, border: "1px solid var(--line)" }} dangerouslySetInnerHTML={{ __html: svg }} />
         <CopyPix code={p.pix.code} />
         <p className="pm-okbox pm-small" style={{ marginTop: 16 }}>
-          Assim que o pagamento cair, esta página muda sozinha e você cria sua senha. Não feche esta tela.
+          Assim que o pagamento cair, esta página muda sozinha e libera sua entrada. Não feche esta tela.
         </p>
         {expira && (
           <p className="pm-muted pm-small" style={{ marginBottom: 0 }}>
@@ -111,7 +103,7 @@ export default async function ObrigadoPage({ searchParams }: { searchParams: Pro
       <span className="pm-tag pm-tag-warn">Aguardando pagamento</span>
       <h1 style={{ fontSize: 26, marginTop: 10 }}>Quase lá!</h1>
       <p>
-        Assim que o pagamento for confirmado, esta página libera a criação da sua senha automaticamente. No Pix, isso leva
+        Assim que o pagamento for confirmado, esta página libera sua entrada automaticamente. No Pix, isso leva
         poucos segundos. No boleto, pode levar até 3 dias úteis.
       </p>
       <p className="pm-muted pm-small">Guarde o endereço desta página: é o seu link de primeiro acesso.</p>

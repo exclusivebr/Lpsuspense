@@ -4,16 +4,16 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, checkPassword, isAdmin, sessionToken } from "@/lib/admin";
-import { getPurchase, newRef, normalizeEmail, savePurchase } from "@/lib/accounts";
+import { getPurchase, newRef, normalizePhone, savePurchase } from "@/lib/accounts";
 
 export async function liberarManual(formData: FormData) {
   if (!(await isAdmin())) redirect("/admin");
   const nome = String(formData.get("nome") ?? "").trim().slice(0, 120);
-  const email = normalizeEmail(String(formData.get("email") ?? "")).slice(0, 160);
-  if (nome.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) redirect("/admin?erro=1");
+  const telefone = normalizePhone(String(formData.get("telefone") ?? ""));
+  if (nome.length < 2 || !telefone) redirect("/admin?erro=1");
   const now = new Date().toISOString();
   const ref = newRef();
-  await savePurchase({ ref, nome, email, status: "approved", source: "manual", createdAt: now, approvedAt: now });
+  await savePurchase({ ref, nome, telefone, status: "approved", source: "manual", createdAt: now, approvedAt: now });
   redirect(`/admin?novo=${ref}`);
 }
 

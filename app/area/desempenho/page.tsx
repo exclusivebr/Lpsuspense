@@ -12,7 +12,7 @@ const ROTULO = { incompleto: "Dados insuficientes", forte: "Pronto para a prova"
 
 export default async function DesempenhoPage() {
   const aluno = await requireStudent();
-  const tentativas = await listarTentativas(aluno.email);
+  const tentativas = await listarTentativas(aluno.id);
   const c = consolidar(tentativas);
   const completos = SIMULADOS.filter((s) => s.tipo === "completo");
   const feitosCompletos = completos.filter((s) => tentativas.some((t) => t.simuladoId === s.id)).length;
