@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import QRCode from "qrcode";
 import AutoRefresh from "@/components/AutoRefresh";
+import CopyPix from "@/components/CopyPix";
+import { brl } from "@/lib/site";
 import { SenhaForm } from "@/components/Forms";
 import { getPurchase, getStudent } from "@/lib/accounts";
 import { syncPurchase } from "@/lib/billing";
@@ -77,6 +80,28 @@ export default async function ObrigadoPage({ searchParams }: { searchParams: Pro
         <Link href="/#oferta" className="pm-btn pm-btn-gold pm-btn-block">
           Tentar novamente
         </Link>
+      </Shell>
+    );
+  }
+  if (p.pix?.code) {
+    const svg = await QRCode.toString(p.pix.code, { type: "svg", margin: 1, width: 240, errorCorrectionLevel: "M" });
+    const expira = p.pix.expiresAt ? new Date(p.pix.expiresAt) : null;
+    return (
+      <Shell>
+        <AutoRefresh seconds={5} />
+        <span className="pm-tag pm-tag-warn">Aguardando o Pix</span>
+        <h1 style={{ fontSize: 26, marginTop: 10 }}>Pague {brl(p.amount ?? 0)} com Pix</h1>
+        <p className="pm-muted">Abra o app do seu banco, escolha <strong>Pix → Pagar com QR Code</strong> ou <strong>Pix Copia e Cola</strong>.</p>
+        <div style={{ width: 240, maxWidth: "100%", margin: "8px auto 16px", background: "#fff", padding: 8, borderRadius: 12, border: "1px solid var(--line)" }} dangerouslySetInnerHTML={{ __html: svg }} />
+        <CopyPix code={p.pix.code} />
+        <p className="pm-okbox pm-small" style={{ marginTop: 16 }}>
+          Assim que o pagamento cair, esta página muda sozinha e você cria sua senha. Não feche esta tela.
+        </p>
+        {expira && (
+          <p className="pm-muted pm-small" style={{ marginBottom: 0 }}>
+            Código válido até {expira.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" })}.
+          </p>
+        )}
       </Shell>
     );
   }

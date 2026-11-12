@@ -11,6 +11,8 @@ Infoproduto para o concurso de **Soldado PM de 2ª Classe da PMESP** (edital DP-
 | `/admin` | Vendas, receita, alunos e liberação manual de acesso (senha `ADMIN_PASSWORD`) |
 
 ## Configurar para vender
+**Pagamento via Wiven (Pix):** coloque `WIVEN_PUBLIC_KEY` e `WIVEN_SECRET_KEY` na Vercel e faça redeploy. O cliente informa nome, e-mail, WhatsApp e CPF, vê o QR Code/copia e cola no próprio site e, quando o Pix cai, a Wiven avisa `/api/webhook/wiven` e a página libera a criação da senha. O aviso só é aceito com o token devolvido pela Wiven na criação da cobrança e com o valor correto.
+
 1. Banco: Vercel Blob privado conectado ao projeto (cria `BLOB_READ_WRITE_TOKEN`).
 2. Variáveis (veja `.env.example`): `MERCADOPAGO_ACCESS_TOKEN`, `PMESP_PRICE`, `ADMIN_PASSWORD`, `PMESP_SESSION_SECRET`.
 3. **Apague `PMESP_DEMO`** antes de vender (com ela, sem checkout configurado, o acesso é liberado sem pagar).

@@ -6,7 +6,7 @@ import SubmitButton from "./SubmitButton";
 
 type Action = (s: FormState, f: FormData) => Promise<FormState>;
 
-export function CompraForm({ action, cta }: { action: Action; cta: string }) {
+export function CompraForm({ action, cta, pedirDados = false }: { action: Action; cta: string; pedirDados?: boolean }) {
   const [state, formAction] = useActionState(action, {});
   return (
     <form action={formAction}>
@@ -18,8 +18,21 @@ export function CompraForm({ action, cta }: { action: Action; cta: string }) {
         <label htmlFor="email">Seu melhor e-mail (será seu login)</label>
         <input id="email" name="email" type="email" autoComplete="email" inputMode="email" defaultValue={state.email} key={`e${state.email}`} required />
       </div>
+      {pedirDados && (
+        <div className="pm-grid pm-grid-2" style={{ gap: 12 }}>
+          <div className="pm-field">
+            <label htmlFor="telefone">WhatsApp (com DDD)</label>
+            <input id="telefone" name="telefone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999" defaultValue={state.telefone} key={`t${state.telefone}`} required />
+          </div>
+          <div className="pm-field">
+            <label htmlFor="cpf">CPF</label>
+            <input id="cpf" name="cpf" inputMode="numeric" placeholder="000.000.000-00" defaultValue={state.cpf} key={`c${state.cpf}`} required />
+          </div>
+        </div>
+      )}
       {state.erro && <p className="pm-error">{state.erro}</p>}
-      <SubmitButton pending="Abrindo pagamento…">{cta}</SubmitButton>
+      <SubmitButton pending={pedirDados ? "Gerando seu Pix…" : "Abrindo pagamento…"}>{cta}</SubmitButton>
+      {pedirDados && <p className="pm-muted pm-small pm-center" style={{ marginTop: 10, marginBottom: 0 }}>🔒 Pagamento seguro via Pix. O CPF é exigido para emitir a cobrança.</p>}
     </form>
   );
 }

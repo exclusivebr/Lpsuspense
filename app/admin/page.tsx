@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { isAdmin } from "@/lib/admin";
 import { listPurchases, listStudents } from "@/lib/accounts";
 import { mercadoPagoConfigured, productPrice } from "@/lib/payments";
+import { wivenConfigured } from "@/lib/wiven";
 import { brl, siteUrl } from "@/lib/site";
 import { storeConfigured } from "@/lib/store";
 import { aprovarCompra, liberarManual, loginAdmin } from "./actions";
@@ -41,7 +42,7 @@ export default async function AdminVendas({ searchParams }: { searchParams: Prom
       <div className="pm-wrap">
         <h1>Vendas · Missão PMESP</h1>
         {!storeConfigured() && <p className="pm-note">Banco não conectado: os dados estão só em memória (modo desenvolvimento).</p>}
-        {!mercadoPagoConfigured() && (
+        {!mercadoPagoConfigured() && !wivenConfigured() && (
           <p className="pm-note" style={{ marginTop: 8 }}>
             Mercado Pago não configurado (MERCADOPAGO_ACCESS_TOKEN). {process.env.PMESP_CHECKOUT_URL ? "Usando checkout externo: aprove as compras manualmente." : ""}
           </p>
@@ -99,7 +100,7 @@ export default async function AdminVendas({ searchParams }: { searchParams: Prom
                   <td>
                     <span className={`pm-tag ${STATUS[c.status][1]}`}>{STATUS[c.status][0]}</span>
                   </td>
-                  <td className="pm-small">{c.source}{c.paymentId ? ` #${c.paymentId}` : ""}</td>
+                  <td className="pm-small">{c.source}{c.paymentId ? ` #${c.paymentId}` : ""}{c.pix ? ` #${c.pix.transactionId}` : ""}{c.telefone ? <div className="pm-muted">{c.telefone}</div> : null}</td>
                   <td className="pm-small" style={{ wordBreak: "break-all" }}>
                     {c.status === "approved" ? (
                       c.claimedAt ? "Conta criada" : <a href={link(c.ref)}>{link(c.ref)}</a>

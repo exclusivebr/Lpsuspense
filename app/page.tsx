@@ -3,6 +3,7 @@ import Countdown from "@/components/Countdown";
 import { CompraForm } from "@/components/Forms";
 import { CRONOGRAMA, DISCIPLINAS, EDITAL_ATUAL, HISTORICO, NOTA, ORDEM_DISCIPLINAS } from "@/lib/edital";
 import { productPrice } from "@/lib/payments";
+import { wivenConfigured } from "@/lib/wiven";
 import { brl } from "@/lib/site";
 import { BANCO, SIMULADOS } from "@/lib/simulados";
 import { iniciarCompra } from "./actions";
@@ -19,7 +20,7 @@ const ENTREGAVEIS = [
 ];
 
 const FAQ = [
-  { q: "Como recebo o acesso?", a: "Assim que o pagamento é aprovado (Pix aprova na hora), você volta para o site e cria sua senha. O login é o seu e-mail." },
+  { q: "Como recebo o acesso?", a: "Assim que o Pix é pago, a própria página libera a criação da sua senha, normalmente em poucos segundos. O login é o seu e-mail." },
   { q: "As questões são de provas anteriores?", a: "São questões inéditas, escritas no estilo da Vunesp a partir dos assuntos que mais caíram nas provas de Soldado PM de 2022 a 2026. Assim você treina o formato sem decorar respostas que já viu." },
   { q: "Por quanto tempo tenho acesso?", a: "Até a prova do concurso atual (28/02/2027), com todas as atualizações do edital incluídas." },
   { q: "Posso fazer pelo celular?", a: "Sim. Tudo funciona no celular, no tablet e no computador, e o simulado salva suas respostas se a página fechar." },
@@ -202,9 +203,9 @@ export default function VendaPage() {
               <small>R$</small> {preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </div>
             <p className="pm-muted pm-small" style={{ marginTop: 6 }}>
-              Pagamento único · Pix, cartão ou boleto · acesso imediato no Pix
+              {wivenConfigured() ? "Pagamento único via Pix · acesso liberado na hora" : "Pagamento único · Pix, cartão ou boleto · acesso imediato no Pix"}
             </p>
-            <CompraForm action={iniciarCompra} cta="Garantir meu acesso" />
+            <CompraForm action={iniciarCompra} cta={wivenConfigured() ? "Pagar com Pix" : "Garantir meu acesso"} pedirDados={wivenConfigured()} />
           </div>
         </div>
       </section>

@@ -14,7 +14,13 @@ export type Purchase = {
   nome: string;
   email: string;
   status: "pending" | "approved" | "rejected";
-  source: "mercadopago" | "manual" | "demo";
+  source: "mercadopago" | "wiven" | "manual" | "demo";
+  telefone?: string;
+  cpf?: string;
+  /** Cobrança Pix da Wiven. */
+  pix?: { transactionId: string; webhookToken?: string; code: string; image?: string; expiresAt?: string };
+  /** Última consulta direta ao gateway (limitada para não virar polling). */
+  checkedAt?: string;
   amount?: number;
   paymentId?: string;
   createdAt: string;
