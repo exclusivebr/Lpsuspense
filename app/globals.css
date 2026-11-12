@@ -332,3 +332,15 @@
 @media (max-width: 560px) { .pm-hbar { grid-template-columns: 1fr auto; } .pm-hbar .b { grid-column: 1 / -1; grid-row: 2; } }
 
 @media (max-width: 719px) { .pm-grid-4 { grid-template-columns: repeat(2, 1fr); } .pm-grid-4 .pm-stat strong { font-size: 22px; } }
+
+/* Pagamentos de afiliado */
+.pm-pay { border-top: 1px dashed var(--line); padding-top: 12px; }
+.pm-pay h4 { margin: 0 0 8px; font-size: 15px; color: var(--ink); }
+.pm-pay-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin: 0; }
+.pm-pay-form label { display: grid; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.pm-pay-form label.grow { flex: 1; min-width: 160px; }
+.pm-pay-form input { padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 9px; font: inherit; font-size: 14px; color: var(--ink); background: #fff; }
+.pm-pay-form input[name="valor"] { width: 120px; }
+.pm-pay-hist summary { cursor: pointer; font-weight: 700; color: var(--navy-2); font-size: 14px; }
+.pm-pay-hist table { margin-top: 8px; font-size: 14px; }
+.pm-pay-hist td { padding: 8px 10px; }

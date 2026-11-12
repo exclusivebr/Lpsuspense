@@ -19,7 +19,8 @@ import {
   excluirCompra,
   liberarManual,
   loginAdmin,
-  pagarComissoes,
+  excluirPagamento,
+  registrarPagamento,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ const ORIGEM: Record<Purchase["source"], string> = { wiven: "Pix Wiven", mercado
 const dataHora = (iso: string) =>
   new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
 
-type SP = { aba?: string; novo?: string; erro?: string; senha?: string; periodo?: string; de?: string; ate?: string; todas?: string };
+type SP = { aba?: string; novo?: string; erro?: string; senha?: string; periodo?: string; de?: string; ate?: string; todas?: string; pago?: string };
 
 const LIMITE = 50;
 
@@ -60,7 +61,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   }
 
   const [compras, alunos, afiliados, base] = await Promise.all([listPurchases(), listStudents(), listAfiliados(), siteUrl()]);
-  const comissoesAPagar = afiliados.reduce((s, a) => s + resumoAfiliado(a.codigo, compras).aPagar, 0);
+  const comissoesAPagar = afiliados.reduce((s, a) => s + resumoAfiliado(a, compras).aPagar, 0);
+  // Data e hora de agora em São Paulo, no formato do campo datetime-local.
+  const agoraSP = new Date(Date.now() - 3 * 3_600_000).toISOString().slice(0, 16);
   const aba = sp.aba === "afiliados" ? "afiliados" : "vendas";
 
   // ---- Período (vale para números, gráficos e tabela da aba Vendas) ----
@@ -245,7 +248,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                           <>
                             <strong>{c.afiliado.nome}</strong>
                             <div className="pm-muted">
-                              {c.afiliado.percentual}% · {brl(c.afiliado.comissao)} {c.status === "approved" && (c.comissaoPagaEm ? "· paga" : "· a pagar")}
+                              {c.afiliado.percentual}% · {brl(c.afiliado.comissao)}
                             </div>
                           </>
                         ) : (
@@ -318,7 +321,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
             <div className="pm-grid" style={{ marginTop: 20 }}>
               {afiliados.map((a) => {
-                const r = resumoAfiliado(a.codigo, compras);
+                const r = resumoAfiliado(a, compras);
                 const linkVenda = `${base}/a/${a.codigo}`;
                 const linkPainel = `${base}/parceiro/${a.token}`;
                 return (
@@ -363,17 +366,60 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
                     <div className="pm-aff-nums">
                       <div><span>Vendas</span><strong>{r.vendas}</strong>{r.pendentes > 0 && <small className="pm-muted"> +{r.pendentes} pend.</small>}</div>
-                      <div><span>Total vendido</span><strong>{brl(r.vendido)}</strong></div>
-                      <div><span>A pagar</span><strong style={{ color: r.aPagar > 0 ? "var(--bad)" : undefined }}>{brl(r.aPagar)}</strong></div>
+                      <div><span>Comissão total</span><strong>{brl(r.ganho)}</strong></div>
                       <div><span>Já pago</span><strong>{brl(r.pago)}</strong></div>
+                      <div>
+                        <span>{r.credito > 0 ? "Pago a mais" : "A pagar"}</span>
+                        <strong style={{ color: r.aPagar > 0 ? "var(--bad)" : r.credito > 0 ? "var(--warn)" : undefined }}>{brl(r.credito > 0 ? r.credito : r.aPagar)}</strong>
+                      </div>
                     </div>
-                    {r.aPagar > 0 && (
-                      <form action={pagarComissoes}>
+
+                    <div className="pm-pay">
+                      <h4>Registrar pagamento</h4>
+                      {sp.pago === a.codigo && <p className="pm-okbox pm-small" style={{ margin: "0 0 10px" }}>Pagamento registrado. Ele já aparece no painel do afiliado.</p>}
+                      {sp.erro === "pagamento" && <p className="pm-error pm-small">Informe um valor maior que zero.</p>}
+                      <form action={registrarPagamento} className="pm-pay-form">
                         <input type="hidden" name="codigo" value={a.codigo} />
-                        <ConfirmButton className="pm-btn pm-btn-gold pm-btn-sm" msg={`Confirmar que você pagou ${brl(r.aPagar)} para ${a.nome}?`}>
-                          Marcar {brl(r.aPagar)} como pago
-                        </ConfirmButton>
+                        <label>
+                          Valor (R$)
+                          <input name="valor" type="number" step="0.01" min="0.01" defaultValue={r.aPagar > 0 ? r.aPagar.toFixed(2) : ""} placeholder="0,00" required />
+                        </label>
+                        <label>
+                          Data e hora
+                          <input name="em" type="datetime-local" defaultValue={agoraSP} required />
+                        </label>
+                        <label className="grow">
+                          Observação (opcional)
+                          <input name="obs" maxLength={120} placeholder="Ex.: Pix Nubank" />
+                        </label>
+                        <button className="pm-btn pm-btn-gold pm-btn-sm" type="submit">Registrar</button>
                       </form>
+                    </div>
+
+                    {r.pagamentos.length > 0 && (
+                      <details className="pm-pay-hist" open={sp.pago === a.codigo}>
+                        <summary>Histórico de pagamentos ({r.pagamentos.length})</summary>
+                        <table>
+                          <tbody>
+                            {r.pagamentos.map((p) => (
+                              <tr key={p.id}>
+                                <td>{dataHora(p.em)}</td>
+                                <td style={{ fontWeight: 700 }}>{brl(p.valor)}</td>
+                                <td className="pm-muted">{p.obs ?? ""}</td>
+                                <td style={{ textAlign: "right" }}>
+                                  <form action={excluirPagamento}>
+                                    <input type="hidden" name="codigo" value={a.codigo} />
+                                    <input type="hidden" name="id" value={p.id} />
+                                    <ConfirmButton className="pm-btn pm-btn-danger pm-btn-sm" msg={`Apagar o pagamento de ${brl(p.valor)} de ${dataHora(p.em)}?`}>
+                                      Apagar
+                                    </ConfirmButton>
+                                  </form>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </details>
                     )}
                   </div>
                 );

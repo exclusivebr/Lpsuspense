@@ -22,7 +22,8 @@ export default async function ParceiroPage({ params }: { params: Promise<{ token
   const a = await getAfiliadoPorToken(token);
   if (!a) notFound();
   const [compras, base] = await Promise.all([listPurchases(), siteUrl()]);
-  const r = resumoAfiliado(a.codigo, compras);
+  const r = resumoAfiliado(a, compras);
+  const dh = (iso: string) => new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
   const link = `${base}/a/${a.codigo}`;
 
   return (
@@ -38,7 +39,7 @@ export default async function ParceiroPage({ params }: { params: Promise<{ token
       <main className="pm-page">
         <div className="pm-wrap">
           <p className="pm-muted" style={{ marginBottom: 4 }}>Olá, {a.nome.split(" ")[0]} 👋</p>
-          <h1>Suas vendas</h1>
+          <h1>Seu painel</h1>
           {!a.ativo && <p className="pm-error">Seu link está pausado no momento. Fale com o responsável pelo produto.</p>}
 
           <div className="pm-card" style={{ marginTop: 12 }}>
@@ -55,12 +56,33 @@ export default async function ParceiroPage({ params }: { params: Promise<{ token
 
           <div className="pm-grid pm-grid-4" style={{ marginTop: 16 }}>
             <div className="pm-card pm-stat"><span>Vendas pagas</span><strong>{r.vendas}</strong></div>
-            <div className="pm-card pm-stat"><span>Total vendido</span><strong>{brl(r.vendido)}</strong></div>
-            <div className="pm-card pm-stat"><span>A receber</span><strong style={{ color: "var(--ok)" }}>{brl(r.aPagar)}</strong></div>
+            <div className="pm-card pm-stat"><span>Comissão total</span><strong>{brl(r.ganho)}</strong></div>
             <div className="pm-card pm-stat"><span>Já recebido</span><strong>{brl(r.pago)}</strong></div>
+            <div className="pm-card pm-stat"><span>A receber</span><strong style={{ color: "var(--ok)" }}>{brl(r.aPagar)}</strong></div>
           </div>
 
-          <h2 style={{ marginTop: 28 }}>Histórico</h2>
+          <h2 style={{ marginTop: 28 }}>Pagamentos recebidos</h2>
+          <div className="pm-table-wrap">
+            <table>
+              <thead>
+                <tr><th>Data e hora</th><th>Valor</th><th>Observação</th></tr>
+              </thead>
+              <tbody>
+                {r.pagamentos.length === 0 && (
+                  <tr><td colSpan={3} className="pm-muted">Nenhum pagamento registrado ainda.</td></tr>
+                )}
+                {r.pagamentos.map((p) => (
+                  <tr key={p.id}>
+                    <td>{dh(p.em)}</td>
+                    <td style={{ fontWeight: 700, color: "var(--ok)" }}>{brl(p.valor)}</td>
+                    <td className="pm-muted">{p.obs ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h2 style={{ marginTop: 28 }}>Suas vendas</h2>
           <div className="pm-table-wrap">
             <table>
               <thead>
@@ -77,10 +99,7 @@ export default async function ParceiroPage({ params }: { params: Promise<{ token
                     <td><span className={`pm-tag ${STATUS[c.status][1]}`}>{STATUS[c.status][0]}</span></td>
                     <td>
                       {c.status === "approved" ? (
-                        <>
-                          <strong>{brl(c.afiliado?.comissao ?? 0)}</strong>{" "}
-                          <span className={`pm-tag ${c.comissaoPagaEm ? "pm-tag-ok" : ""}`}>{c.comissaoPagaEm ? "recebida" : "a receber"}</span>
-                        </>
+                        <strong>{brl(c.afiliado?.comissao ?? 0)}</strong>
                       ) : (
                         <span className="pm-muted">—</span>
                       )}

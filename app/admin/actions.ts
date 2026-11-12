@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, checkPassword, isAdmin, sessionToken } from "@/lib/admin";
-import { deletePurchase, getPurchase, listPurchases, newRef, normalizePhone, savePurchase } from "@/lib/accounts";
+import { deletePurchase, getPurchase, newRef, normalizePhone, savePurchase } from "@/lib/accounts";
 import { codigoLivre, deleteAfiliado, getAfiliado, novoToken, saveAfiliado, slugify, validCodigo } from "@/lib/afiliados";
 
 export async function liberarManual(formData: FormData) {
@@ -87,16 +87,25 @@ export async function excluirAfiliado(formData: FormData) {
   revalidatePath("/admin");
 }
 
-/** Marca como pagas todas as comissões aprovadas e ainda não pagas do afiliado. */
-export async function pagarComissoes(formData: FormData) {
+/** Registra um pagamento feito ao afiliado (valor + data e hora, no horário de São Paulo). */
+export async function registrarPagamento(formData: FormData) {
   await guard();
-  const codigo = String(formData.get("codigo") ?? "");
-  const agora = new Date().toISOString();
-  const compras = await listPurchases();
-  for (const c of compras) {
-    if (c.afiliado?.codigo === codigo && c.status === "approved" && !c.comissaoPagaEm) {
-      await savePurchase({ ...c, comissaoPagaEm: agora });
-    }
-  }
+  const a = await getAfiliado(String(formData.get("codigo") ?? ""));
+  const valor = Math.round(Number(String(formData.get("valor") ?? "").replace(/\./g, "").replace(",", ".")) * 100) / 100;
+  const quando = String(formData.get("em") ?? "");
+  const obs = String(formData.get("obs") ?? "").trim().slice(0, 120);
+  if (!a || !Number.isFinite(valor) || valor <= 0) redirect("/admin?aba=afiliados&erro=pagamento");
+  // datetime-local chega sem fuso: interpretamos como horário de Brasília (UTC-3).
+  const em = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(quando) ? new Date(`${quando}:00-03:00`) : new Date();
+  const pagamento = { id: novoToken().slice(0, 12), valor, em: em.toISOString(), registradoEm: new Date().toISOString(), ...(obs ? { obs } : {}) };
+  await saveAfiliado({ ...a, pagamentos: [...(a.pagamentos ?? []), pagamento] });
+  redirect(`/admin?aba=afiliados&pago=${a.codigo}`);
+}
+
+export async function excluirPagamento(formData: FormData) {
+  await guard();
+  const a = await getAfiliado(String(formData.get("codigo") ?? ""));
+  const id = String(formData.get("id") ?? "");
+  if (a) await saveAfiliado({ ...a, pagamentos: (a.pagamentos ?? []).filter((p) => p.id !== id) });
   revalidatePath("/admin");
 }

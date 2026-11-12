@@ -15,12 +15,16 @@ export type Afiliado = {
   token: string;
   ativo: boolean;
   createdAt: string;
+  /** Pagamentos feitos ao afiliado (registrados no painel). */
+  pagamentos?: Pagamento[];
 };
+
+export type Pagamento = { id: string; valor: number; em: string; obs?: string; registradoEm: string };
 
 export function slugify(v: string) {
   return v
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "")
     .slice(0, 20);
@@ -56,16 +60,27 @@ export const novoToken = () => randomBytes(16).toString("hex");
 
 export const arred = (n: number) => Math.round(n * 100) / 100;
 
-export function resumoAfiliado(codigo: string, compras: Purchase[]) {
-  const minhas = compras.filter((c) => c.afiliado?.codigo === codigo && c.source !== "demo");
+/**
+ * Saldo do afiliado: comissões das vendas aprovadas menos o que já foi pago.
+ * (Vendas marcadas como pagas no modelo antigo, campo comissaoPagaEm, contam como pagas.)
+ */
+export function resumoAfiliado(a: Afiliado, compras: Purchase[]) {
+  const minhas = compras.filter((c) => c.afiliado?.codigo === a.codigo && c.source !== "demo");
   const aprovadas = minhas.filter((c) => c.status === "approved");
   const comissao = (c: Purchase) => c.afiliado?.comissao ?? 0;
+  const ganho = arred(aprovadas.reduce((s, c) => s + comissao(c), 0));
+  const pagamentos = [...(a.pagamentos ?? [])].sort((x, y) => y.em.localeCompare(x.em));
+  const pagoAntigo = aprovadas.filter((c) => c.comissaoPagaEm).reduce((s, c) => s + comissao(c), 0);
+  const pago = arred(pagamentos.reduce((s, p) => s + p.valor, 0) + pagoAntigo);
   return {
     vendas: aprovadas.length,
     pendentes: minhas.filter((c) => c.status === "pending").length,
     vendido: arred(aprovadas.reduce((s, c) => s + (c.amount ?? 0), 0)),
-    aPagar: arred(aprovadas.filter((c) => !c.comissaoPagaEm).reduce((s, c) => s + comissao(c), 0)),
-    pago: arred(aprovadas.filter((c) => c.comissaoPagaEm).reduce((s, c) => s + comissao(c), 0)),
+    ganho,
+    pago,
+    aPagar: arred(Math.max(0, ganho - pago)),
+    credito: arred(Math.max(0, pago - ganho)),
+    pagamentos,
     compras: minhas,
   };
 }
