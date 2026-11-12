@@ -273,3 +273,22 @@
   .pm-rise, .pm-float, .pm-pop { animation: none; }
   .pm-card-hover, .pm-sticky { transition: none; }
 }
+
+/* =================== Admin =================== */
+.pm-btn-sm { padding: 7px 12px; font-size: 13px; border-radius: 9px; }
+.pm-btn-danger { background: transparent; color: var(--bad) !important; border: 1.5px solid #fecaca; }
+.pm-btn-danger:hover { background: var(--bad-bg); }
+.pm-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin: 18px 0 20px; flex-wrap: wrap; }
+.pm-tabs a { padding: 10px 16px; text-decoration: none; font-weight: 700; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.pm-tabs a[aria-current="page"] { color: var(--navy); border-color: var(--gold); }
+.pm-linkbox { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pm-linkbox code { background: var(--soft); padding: 6px 10px; border-radius: 8px; font-size: 13px; word-break: break-all; }
+.pm-aff { display: grid; gap: 12px; }
+.pm-aff-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.pm-aff-nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pm-aff-nums div { background: var(--soft); border-radius: 10px; padding: 10px; }
+.pm-aff-nums span { display: block; font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+.pm-aff-nums strong { font-size: 18px; color: var(--ink); }
+@media (max-width: 640px) { .pm-aff-nums { grid-template-columns: repeat(2, 1fr); } }
+.pm-inline { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
+.pm-inline input { width: 80px; padding: 7px 10px; border: 1.5px solid var(--line); border-radius: 9px; font: inherit; font-size: 14px; }

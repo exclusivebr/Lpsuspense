@@ -1,7 +1,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getJSON, listJSON, setJSON } from "./store";
+import { delKey, getJSON, listJSON, setJSON } from "./store";
 
 export const STUDENT_COOKIE = "pmesp_aluno";
 const SESSION_DAYS = 60;
@@ -23,6 +23,10 @@ export type Purchase = {
   paymentId?: string;
   createdAt: string;
   approvedAt?: string;
+  /** Afiliado que indicou a venda (porcentagem e comissão gravadas no momento da compra). */
+  afiliado?: { codigo: string; nome: string; percentual: number; comissao: number };
+  /** Quando a comissão desta venda foi paga ao afiliado. */
+  comissaoPagaEm?: string;
 };
 
 export type Student = {
@@ -92,6 +96,17 @@ export async function savePurchase(p: Purchase) {
   await setJSON(`purchases/${p.ref}`, p);
   await syncStudent(p);
 }
+/** Exclui a venda. Se ela é a que liberou o acesso do aluno, o acesso também é removido. */
+export async function deletePurchase(ref: string) {
+  const p = await getPurchase(ref);
+  if (!p) return;
+  await delKey(`purchases/${p.ref}`);
+  const id = normalizePhone(p.telefone);
+  if (!id) return;
+  const s = await getJSON<Student>(`students/${idKey(id)}`);
+  if (s && s.ref === p.ref) await delKey(`students/${idKey(id)}`);
+}
+
 export const listPurchases = async () =>
   (await listJSON<Purchase>("purchases/")).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 

@@ -8,7 +8,9 @@ Infoproduto para o concurso de **Soldado PM de 2ª Classe da PMESP** (edital DP-
 | `/obrigado?ref=…` | Pix (QR Code e copia e cola) e, depois de pago, botão para entrar |
 | `/entrar` | Login do aluno só com o WhatsApp da compra |
 | `/area` | Área do aluno: simulados, resultado, resultado final, edital, o que estudar, plano, redação |
-| `/admin` | Vendas, receita, alunos e liberação manual de acesso (senha `ADMIN_PASSWORD`) |
+| `/admin` | Vendas (aprovar, excluir, liberar acesso manual) e afiliados (senha `ADMIN_PASSWORD`) |
+| `/a/codigo` | Link de divulgação do afiliado (guarda a indicação por 30 dias) |
+| `/parceiro/token` | Painel privado do afiliado: vendas, comissão a receber e já recebida |
 
 ## Configurar para vender
 **Pagamento via Wiven (Pix):** coloque `WIVEN_PUBLIC_KEY` e `WIVEN_SECRET_KEY` na Vercel e faça redeploy. O cliente informa só nome e WhatsApp (o e-mail exigido pela Wiven é gerado a partir do número; CPF só com `PMESP_PEDIR_CPF=1`), vê o QR Code/copia e cola no próprio site e, quando o Pix cai, a Wiven avisa `/api/webhook/wiven` e a página libera a entrada. O login do aluno é só o WhatsApp da compra; estorno ou contestação bloqueiam o acesso. O aviso só é aceito com o token devolvido pela Wiven na criação da cobrança e com o valor correto.

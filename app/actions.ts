@@ -1,6 +1,8 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { AFILIADO_COOKIE, arred, getAfiliado } from "@/lib/afiliados";
 import { endSession, formatPhone, getPurchase, getStudent, newRef, normalizePhone, savePurchase, startSession, type Purchase } from "@/lib/accounts";
 import { pedirCpf } from "@/lib/config";
 import { createCheckout, mercadoPagoConfigured, PRODUCT_TITLE, productPrice } from "@/lib/payments";
@@ -49,8 +51,21 @@ export async function iniciarCompra(_: FormState, formData: FormData): Promise<F
   const demo = !temGateway && (process.env.NODE_ENV !== "production" || process.env.PMESP_DEMO === "1");
   if (!temGateway && !demo) return { erro: "O pagamento ainda não foi configurado. Fale com o suporte.", ...voltar };
 
+  const codAfiliado = (await cookies()).get(AFILIADO_COOKIE)?.value ?? "";
+  const afiliado = codAfiliado ? await getAfiliado(codAfiliado) : null;
+
   const purchase: Purchase = {
     ref: newRef(),
+    ...(afiliado?.ativo
+      ? {
+          afiliado: {
+            codigo: afiliado.codigo,
+            nome: afiliado.nome,
+            percentual: afiliado.percentual,
+            comissao: arred((productPrice() * afiliado.percentual) / 100),
+          },
+        }
+      : {}),
     nome,
     telefone,
     ...(pedirCpf() ? { cpf } : {}),
