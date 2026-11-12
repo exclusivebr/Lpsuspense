@@ -33,7 +33,9 @@
 .pm h3 { font-size: 18px; font-weight: 700; }
 .pm p { margin: 0 0 1em; }
 .pm a { color: var(--navy-2); }
-.pm table { font-size: 15px; }
+.pm table { font-size: 15px; width: 100%; border-collapse: collapse; }
+.pm th, .pm td { text-align: left; padding: 10px 12px; vertical-align: middle; }
+.pm th { font-size: 12px; text-transform: uppercase; font-weight: 700; }
 .pm th, .pm td { border-bottom: 1px solid var(--line); white-space: normal; color: var(--text); }
 .pm th { color: var(--muted); background: var(--soft); font-family: inherit; letter-spacing: .04em; }
 .pm td a { color: var(--navy-2); }
@@ -292,3 +294,41 @@
 @media (max-width: 640px) { .pm-aff-nums { grid-template-columns: repeat(2, 1fr); } }
 .pm-inline { display: inline-flex; gap: 6px; align-items: center; margin: 0; }
 .pm-inline input { width: 80px; padding: 7px 10px; border: 1.5px solid var(--line); border-radius: 9px; font: inherit; font-size: 14px; }
+
+/* =================== Admin: filtro e gráficos =================== */
+.pm-filter { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.pm-seg { display: inline-flex; background: var(--soft); border-radius: 12px; padding: 4px; gap: 2px; flex-wrap: wrap; }
+.pm-seg a { padding: 8px 12px; border-radius: 9px; text-decoration: none; font-weight: 700; font-size: 14px; color: var(--muted); }
+.pm-seg a:hover { background: rgba(255,255,255,.7); color: var(--ink); }
+.pm-seg a[aria-current="true"] { background: #fff; color: var(--navy); box-shadow: 0 1px 3px rgba(15,23,42,.12); }
+.pm-custom { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0; font-size: 14px; color: var(--muted); font-weight: 700; }
+.pm-custom label { display: inline-flex; gap: 6px; align-items: center; }
+.pm-custom input[type="date"] { padding: 7px 10px; border: 1.5px solid var(--line); border-radius: 9px; font: inherit; font-size: 14px; color: var(--ink); background: #fff; }
+.pm-chart { position: relative; margin-top: 8px; }
+.pm-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.pm-chart .grid { stroke: #eef2f6; stroke-width: 1; }
+.pm-chart .base { stroke: #cbd5e1; stroke-width: 1; }
+.pm-chart .tick { fill: #64748b; font-size: 12px; font-family: inherit; }
+.pm-chart .empty { fill: #94a3b8; font-size: 14px; font-family: inherit; }
+.pm-chart g.off path { opacity: .45; }
+.pm-chart rect:focus { outline: none; }
+.pm-chart rect:focus-visible { stroke: var(--navy-2); stroke-width: 2; }
+.pm-tip { position: absolute; top: 0; transform: translateX(-50%); background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; box-shadow: 0 10px 30px -12px rgba(15,23,42,.35); pointer-events: none; font-size: 13px; white-space: nowrap; z-index: 2; }
+.pm-tip-t { color: var(--muted); font-size: 12px; margin-bottom: 4px; text-transform: capitalize; }
+.pm-tip-row { display: flex; align-items: center; gap: 6px; }
+.pm-tip-row i { width: 12px; height: 2px; border-radius: 2px; display: inline-block; }
+.pm-tip-row strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.pm-tip-row span { color: var(--muted); }
+.pm-chart-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.pm-legend { display: flex; gap: 14px; font-size: 13px; color: var(--text); flex-wrap: wrap; }
+.pm-legend span { display: inline-flex; gap: 6px; align-items: center; }
+.pm-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.pm-hbars { display: grid; gap: 10px; margin-top: 12px; }
+.pm-hbar { display: grid; grid-template-columns: minmax(110px, 200px) 1fr auto; gap: 12px; align-items: center; font-size: 14px; }
+.pm-hbar .n { color: var(--ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-hbar .b { height: 16px; }
+.pm-hbar .b i { display: block; height: 16px; min-width: 2px; border-radius: 0 4px 4px 0; }
+.pm-hbar .v { color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 560px) { .pm-hbar { grid-template-columns: 1fr auto; } .pm-hbar .b { grid-column: 1 / -1; grid-row: 2; } }
+
+@media (max-width: 719px) { .pm-grid-4 { grid-template-columns: repeat(2, 1fr); } .pm-grid-4 .pm-stat strong { font-size: 22px; } }
